@@ -109,8 +109,8 @@ def register_user():
         else:
             break
 
-    print("Step 1: Fingerprint authentication (Placeholder)")
-    print("Step 2: Voice authentication (Placeholder)")
+    print("Step 1: Fingerprint registration (Placeholder)")
+    print("Step 2: Voice registration (Placeholder)")
 
     face_img = capture_face_image()
     if face_img is not None:
