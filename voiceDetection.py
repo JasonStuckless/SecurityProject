@@ -39,10 +39,10 @@ def authenticateVoice():
     # The method returns a float how dissimilar the two speakers in the audio files are
     distance = cdist(embedding1, embedding2, metric="cosine")[0,0]
 
-    # with a threshold of 65%, check if the user is the once registered to the user login
-    if(distance <= 0.35):
+    # with a threshold of 80%, check if the user is the once registered to the user login
+    if(distance <= 0.20):
         print("User Authenticated. Voice matched")
-    elif(distance > 0.35):
+    elif(distance > 0.20):
         print("User Authentication failed. Voice did not match.")
 
 # This function is used to record audio
