@@ -17,33 +17,57 @@ import torch
 from pyannote.audio import Model, Inference
 from scipy.spatial.distance import cdist
 import numpy as np
+import os
 
 def registerVoice():
     recordAudio("registerVoice.wav")
 
+    # converting the audio clip to a BLOB to store into the sqlite server
+    with open("registerVoice.wav", "rb") as file:
+        voiceBLOB = file.read()
+
+    removeAudioFile("registerVoice.wav")
+
+    return voiceBLOB;
+
+def removeAudioFile(filename):
+    # deleting the created audio file
+    os.remove(filename)
+
 # this method is used to authenticate a speaker through their voice in audio the two files
-def authenticateVoice():
+def authenticateVoice(blob):
     recordAudio("authenticateVoice.wav")
 
     # loading the model from hugging face
     model = Model.from_pretrained("pyannote/wespeaker-voxceleb-resnet34-LM", use_auth_token="")
     inference = Inference(model, window="whole")
 
-    embedding1 = inference("registerVoice.wav")
-    embedding2 = inference("authenticateVoice.wav")
+    embedding1 = inference("authenticateVoice.wav")
+    removeAudioFile("authenticateVoice.wav")
+
+    # creating the audio clip from a BLOB 
+    with open("registerVoice.wav", "wb") as file:
+        file.write(blob)
+
+    embedding2 = inference("registerVoice.wav")
+    removeAudioFile("registerVoice.wav")
 
     # reshapping the 1D arrays to 2D arrays to measure the distance
     embedding1 = np.array(embedding1).reshape(1, -1)
     embedding2 = np.array(embedding2).reshape(1, -1)
 
-    # The method returns a float how dissimilar the two speakers in the audio files are
+    # The method returns (float) how dissimilar the two speakers in the audio files are
     distance = cdist(embedding1, embedding2, metric="cosine")[0,0]
 
-    # with a threshold of 80%, check if the user is the once registered to the user login
-    if(distance <= 0.20):
+    # with a threshold of 60%, check if the user is the once registered to the user login
+    if(distance <= 0.40):
         print("User Authenticated. Voice matched")
-    elif(distance > 0.20):
+        return True
+    elif(distance > 0.40):
         print("User Authentication failed. Voice did not match.")
+        return False
+
+    return distance
 
 # This function is used to record audio
 def recordAudio(filename):
@@ -102,10 +126,11 @@ def isDoneRecording():
 isRecording = threading.Event() # set to cleared state
 
 # SHOULD BE IN MAIN PROGRAM:
-print("Program Started...")
-print("Registering voice...")
+# print("Program Started...")
+# print("Registering voice...")
 
-registerVoice()
+# blob = registerVoice()
 
-print("Authenticating voice...")
-authenticateVoice()
+
+# print("Authenticating voice...")
+# verifiedVoice = authenticateVoice(blob)
