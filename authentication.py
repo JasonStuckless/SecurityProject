@@ -4,6 +4,27 @@ import sqlite3
 import os
 import ctypes
 import voiceDetection
+from dotenv import load_dotenv
+from twilio.rest import Client
+
+load_dotenv("IDs.env")  # Load environment variables from .env file
+
+# Load Twilio credentials from environment variables
+account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+verify_sid = os.getenv("TWILIO_VERIFY_SID")
+
+# ✅ Debugging: Print to check if values are loaded
+print(f"TWILIO_ACCOUNT_SID: {account_sid}")
+print(f"TWILIO_AUTH_TOKEN: {auth_token}")
+print(f"TWILIO_VERIFY_SID: {verify_sid}")
+
+# ✅ Ensure TWILIO_VERIFY_SID is set before proceeding
+if not verify_sid:
+    raise ValueError("ERROR: TWILIO_VERIFY_SID is not set. Please check your environment variables.")
+
+# ✅ Initialize Twilio Client
+client = Client(account_sid, auth_token)
 
 # Path to Haar Cascade for face detection
 CASCADE_PATH = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
@@ -22,7 +43,8 @@ def initialize_database():
             password TEXT,
             fingerprint BLOB,
             voice BLOB,
-            face BLOB
+            face BLOB,
+            phone TEXT
         )
     ''')
     conn.commit()
@@ -89,6 +111,16 @@ def capture_face_image():
     cv2.destroyAllWindows()
     return None
 
+def send_2fa_code(phone_number):
+    """Send a verification code via Twilio SMS."""
+    verification = client.verify.v2.services(verify_sid).verifications.create(to=phone_number, channel="sms")
+    return verification.sid
+
+def verify_2fa_code(phone_number, code):
+    """Verify the user's entered 2FA code."""
+    verification_check = client.verify.v2.services(verify_sid).verification_checks.create(to=phone_number, code=code)
+    return verification_check.status == "approved"
+
 def register_user():
     """Register a new user with facial data."""
     conn = sqlite3.connect(DB_PATH)
@@ -110,19 +142,21 @@ def register_user():
         else:
             break
 
+    phone_number = input("Enter your phone number (e.g., 9057214116): ").strip()
+    phone_number = "+1" + phone_number
+
     print("Step 1: Fingerprint registration (Placeholder)")
 
     # Registering the voice of the specified user
     print("Registering voice...")
     voiceAudioBLOB = voiceDetection.registerVoice()
 
-
     face_img = capture_face_image()
     if face_img is not None:
         face_data = np.array(face_img).tobytes()
         try:
-            cursor.execute("INSERT INTO users (username, password, fingerprint, voice, face) VALUES (?, ?, ?, ?, ?)",
-                           (username, password, None, voiceAudioBLOB, face_data))
+            cursor.execute("INSERT INTO users (username, password, fingerprint, voice, face, phone) VALUES (?, ?, ?, ?, ?, ?)",
+                       (username, password, None, voiceAudioBLOB, face_data, phone_number))
             conn.commit()
             print(f"User '{username}' registered successfully.")
         except sqlite3.IntegrityError:
@@ -138,12 +172,13 @@ def authenticate_user():
     # all authentication booleans
     authenticatedFace = False
     authenticatedVoice = False
+    authenticated2FA = False
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     username = input("Enter username for authentication: ").strip()
-    cursor.execute("SELECT password, fingerprint, voice, face FROM users WHERE username = ?", (username,))
+    cursor.execute("SELECT password, fingerprint, voice, face, phone FROM users WHERE username = ?", (username,))
     user_data = cursor.fetchone()
 
     if user_data is None:
@@ -151,7 +186,7 @@ def authenticate_user():
         conn.close()
         return
 
-    stored_password, stored_fingerprint, stored_voice, stored_face = user_data
+    stored_password, stored_fingerprint, stored_voice, stored_face, phone_number = user_data
 
     print("Step 1: Password authentication (Placeholder)")
     input("Enter your password: ")  # Placeholder for actual password validation
@@ -165,7 +200,7 @@ def authenticate_user():
     print("Step 4: Face authentication")
     face_img = capture_face_image()
     if face_img is None:
-        print("Authentication failed.")
+        print("Face authentication failed.")
         conn.close()
         return
 
@@ -184,7 +219,16 @@ def authenticate_user():
 
     conn.close()
 
-    if (authenticatedFace and authenticatedVoice):
+
+    print("Step 5: 2FA Verification")
+    send_2fa_code(phone_number)
+    code = input("Enter the 2FA verification code sent to your phone: ")
+    if verify_2fa_code(phone_number, code):
+        authenticated2FA = True;
+    else:
+        print("2FA Verification failed, incorrect input.")
+
+    if (authenticatedFace and authenticatedVoice and authenticated2FA):
         print(f"User '{username}' authenticated successfully.")
     else:
         print("Authentication failed.")
