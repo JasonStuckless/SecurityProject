@@ -3,6 +3,7 @@ import numpy as np
 import sqlite3
 import os
 import ctypes
+import voiceDetection
 
 # Path to Haar Cascade for face detection
 CASCADE_PATH = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
@@ -110,14 +111,18 @@ def register_user():
             break
 
     print("Step 1: Fingerprint registration (Placeholder)")
-    print("Step 2: Voice registration (Placeholder)")
+
+    # Registering the voice of the specified user
+    print("Registering voice...")
+    voiceAudioBLOB = voiceDetection.registerVoice()
+
 
     face_img = capture_face_image()
     if face_img is not None:
         face_data = np.array(face_img).tobytes()
         try:
             cursor.execute("INSERT INTO users (username, password, fingerprint, voice, face) VALUES (?, ?, ?, ?, ?)",
-                           (username, password, None, None, face_data))
+                           (username, password, None, voiceAudioBLOB, face_data))
             conn.commit()
             print(f"User '{username}' registered successfully.")
         except sqlite3.IntegrityError:
@@ -129,6 +134,11 @@ def register_user():
 
 def authenticate_user():
     """Authenticate a user using multiple authentication methods."""
+
+    # all authentication booleans
+    authenticatedFace = False
+    authenticatedVoice = False
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -149,8 +159,8 @@ def authenticate_user():
     print("Step 2: Fingerprint authentication (Placeholder)")
     print("Processing fingerprint authentication...")  # Placeholder for actual fingerprint verification
 
-    print("Step 3: Voice authentication (Placeholder)")
-    print("Processing voice authentication...")  # Placeholder for actual voice verification
+    print("Step 3: Voice authentication")
+    authenticatedVoice = voiceDetection.authenticateVoice(stored_voice)
 
     print("Step 4: Face authentication")
     face_img = capture_face_image()
@@ -160,7 +170,6 @@ def authenticate_user():
         return
 
     min_distance = float('inf')
-    authenticated = False
 
     face_img_resized = cv2.resize(face_img, (100, 100))
     stored_face_array = np.frombuffer(stored_face, dtype=np.uint8)
@@ -169,13 +178,13 @@ def authenticate_user():
         stored_face_resized = cv2.resize(stored_face_array.reshape(100, 100), (100, 100))
         distance = np.mean((stored_face_resized - face_img_resized) ** 2)
         if distance < 1000:  # Threshold
-            authenticated = True
+            authenticatedFace = True
     except ValueError:
         print("Face data size mismatch.")
 
     conn.close()
 
-    if authenticated:
+    if (authenticatedFace and authenticatedVoice):
         print(f"User '{username}' authenticated successfully.")
     else:
         print("Authentication failed.")
