@@ -14,16 +14,11 @@ account_sid = os.getenv("TWILIO_ACCOUNT_SID")
 auth_token = os.getenv("TWILIO_AUTH_TOKEN")
 verify_sid = os.getenv("TWILIO_VERIFY_SID")
 
-# ✅ Debugging: Print to check if values are loaded
-print(f"TWILIO_ACCOUNT_SID: {account_sid}")
-print(f"TWILIO_AUTH_TOKEN: {auth_token}")
-print(f"TWILIO_VERIFY_SID: {verify_sid}")
-
-# ✅ Ensure TWILIO_VERIFY_SID is set before proceeding
+# Ensure TWILIO_VERIFY_SID is set before proceeding
 if not verify_sid:
     raise ValueError("ERROR: TWILIO_VERIFY_SID is not set. Please check your environment variables.")
 
-# ✅ Initialize Twilio Client
+# Initialize Twilio Client
 client = Client(account_sid, auth_token)
 
 # Path to Haar Cascade for face detection
