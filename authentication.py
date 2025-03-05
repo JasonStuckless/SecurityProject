@@ -6,6 +6,7 @@ import ctypes
 import voiceDetection
 from dotenv import load_dotenv
 from twilio.rest import Client
+import bcrypt
 
 load_dotenv("IDs.env")  # Load environment variables from .env file
 
@@ -129,13 +130,16 @@ def register_user():
         else:
             break  # Username is unique, proceed with registration
 
-    while True:
-        password = input("Enter a password for the new user: ").strip()
-        confirm_password = input("Confirm password: ").strip()
-        if password != confirm_password:
-            print("Passwords do not match. Please try again.")
-        else:
-            break
+     password = input("Enter a password for the new user: ").strip()
+    confirm_password = input("Confirm password: ").strip()
+
+    # if the both inputted password matches, hash the password with a salt
+    if password != confirm_password:
+        print("Passwords do not match. Please try again.")
+        return
+
+    salt = bcrypt.gensalt()
+    hashPass = bcrypt.hashpw(password.encode('utf-8'), salt)
 
     phone_number = input("Enter your phone number (e.g., 9057214116): ").strip()
     phone_number = "+1" + phone_number
@@ -151,7 +155,7 @@ def register_user():
         face_data = np.array(face_img).tobytes()
         try:
             cursor.execute("INSERT INTO users (username, password, fingerprint, voice, face, phone) VALUES (?, ?, ?, ?, ?, ?)",
-                       (username, password, None, voiceAudioBLOB, face_data, phone_number))
+                       (username, hashPass, None, voiceAudioBLOB, face_data, phone_number))
             conn.commit()
             print(f"User '{username}' registered successfully.")
         except sqlite3.IntegrityError:
@@ -183,9 +187,19 @@ def authenticate_user():
 
     stored_password, stored_fingerprint, stored_voice, stored_face, phone_number = user_data
 
-    print("Step 1: Password authentication (Placeholder)")
-    input("Enter your password: ")  # Placeholder for actual password validation
+    print("Step 1: Password authentication")
+    inputPass = input("Enter your password: ")
+    inputPass = inputPass.strip()
 
+    # hashes the password and checks if it matches the salted hashed password stored on the database
+    checkPass = inputPass.encode('utf-8')
+
+    # checks if password hashes matches
+    if bcrypt.checkpw(checkPass, user_data[0]):
+        print("Authentication successful.")
+    else:
+        print("Authentication failed: Incorrect password.")
+    
     print("Step 2: Fingerprint authentication (Placeholder)")
     print("Processing fingerprint authentication...")  # Placeholder for actual fingerprint verification
 
