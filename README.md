@@ -15,4 +15,4 @@ How to Run:
 5. Register as a user in program.
 6. Login with that account.
 
-Program runs through four types of authentication, username/password, voice, facial and 2FA.
+Program runs through four types of authentication, username/password, voice, facial and SMS 2FA.
