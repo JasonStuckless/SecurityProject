@@ -130,7 +130,7 @@ def register_user():
         else:
             break  # Username is unique, proceed with registration
 
-     password = input("Enter a password for the new user: ").strip()
+    password = input("Enter a password for the new user: ").strip()
     confirm_password = input("Confirm password: ").strip()
 
     # if the both inputted password matches, hash the password with a salt
