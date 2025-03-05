@@ -1,4 +1,4 @@
-**Secure User Authentication System**
+**Secure User Authentication System**  
 **SOFE 4840U: Software & Computer Security**
 
 Group 18 Members:  
