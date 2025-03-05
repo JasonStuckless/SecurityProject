@@ -6,6 +6,7 @@ import ctypes
 import voiceDetection
 from dotenv import load_dotenv
 from twilio.rest import Client
+import bcrypt
 
 load_dotenv("IDs.env")  # Load environment variables from .env file
 
@@ -137,9 +138,19 @@ def register_user():
     while True:
         password = input("Enter a password for the new user: ").strip()
         confirm_password = input("Confirm password: ").strip()
+
+        # if the both inputted password matches, hash the password with a salt
         if password != confirm_password:
             print("Passwords do not match. Please try again.")
         else:
+
+            # generates the salt to be used with hashing
+            salt = bcrypt.gensalt()
+            hashPass = bcrypt.hashpw(password.encode('utf-8'), salt)
+
+            # inputs the salted hash password into the database
+            cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashPass))
+            conn.commit()
             break
 
     phone_number = input("Enter your phone number (e.g., 9057214116): ").strip()
@@ -190,7 +201,19 @@ def authenticate_user():
 
     print("Step 1: Password authentication (Placeholder)")
     input("Enter your password: ")  # Placeholder for actual password validation
+    inputPass = inputPass.strip()
 
+    # hashes the password and checks if it matches the salted hashed password stored on the database
+    checkPass = inputPass.encode('utf-8')
+
+    # checks if password hashes matches
+    if bcrypt.checkpw(checkPass, user_data[0]):
+        print("Authentication successful.")
+    else:
+        print("Authentication failed: Incorrect password.")
+        return
+
+    
     print("Step 2: Fingerprint authentication (Placeholder)")
     print("Processing fingerprint authentication...")  # Placeholder for actual fingerprint verification
 
