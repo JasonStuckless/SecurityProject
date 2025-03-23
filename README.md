@@ -9,10 +9,18 @@ Jason Stuckless  100248154
 
 How to Run:
 1. Download repository.
-2. Enter environment variables in IDs.env. (details in the report)
-3. On line 42 of voiceDetection.py, enter value for user_auth_token. (details in the report)
-4. Run in IDE of your choice.
-5. Register as a user in program.
-6. Login with that account.
+2. Install the following packages:
+```bash
+pip install opencv-python
+pip install numpy
+pip install python-dotenv
+pip install twilio
+pip install bcrypt
+```
+3. Enter environment variables in IDs.env. (details in the report)
+4. On line 42 of voiceDetection.py, enter value for user_auth_token. (details in the report)
+5. Run in IDE of your choice.
+6. Register as a user in program.
+7. Login with that account.
 
 Program runs through four types of authentication, username/password, voice, facial and SMS 2FA.
