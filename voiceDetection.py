@@ -114,6 +114,8 @@ def recordAudio(filename):
     waveFile.writeframes(b''.join(frames))
     waveFile.close()
 
+'''
+Now handled by GUI
 # this function uses another thread to poll a keyboard input that will end the recording of a user
 def isDoneRecording():
     while isRecording.is_set():
@@ -121,6 +123,7 @@ def isDoneRecording():
 
         if (recordAnswer == "n"):
             isRecording.clear() # finishing execution of the thread and clearing state
+'''
 
 # Declaring a variable that creates an event object that a thread can track
 isRecording = threading.Event() # set to cleared state
