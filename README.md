@@ -13,6 +13,10 @@ How to Run:
 ```bash
 pip install opencv-python numpy python-dotenv twilio bcrypt
 ```
+If using python 3.13 you'll need:
+```bash
+pip install opencv-python==4.8.0.76
+```
 3. Enter environment variables in IDs.env. (details in the report)
 4. On line 42 of voiceDetection.py, enter value for user_auth_token. (details in the report)
 5. Run in IDE of your choice.
