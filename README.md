@@ -16,6 +16,9 @@ pip install numpy
 pip install python-dotenv
 pip install twilio
 pip install bcrypt
+pip install numpy
+pip install twilio
+pip install dotenv
 ```
 3. Enter environment variables in IDs.env. (details in the report)
 4. On line 42 of voiceDetection.py, enter value for user_auth_token. (details in the report)
