@@ -21,8 +21,8 @@ pip install python-dotenv
 pip install twilio
 pip install bcrypt
 ```
-3. Enter environment variables in IDs.env. (details in the report)
-4. On line 42 of voiceDetection.py, and line 1406 of gui.py enter value for user_auth_token. (details in the report)
+3. Enter environment variables in IDs.env. (details in the phase 2 report)
+4. On line 42 of voiceDetection.py, and line 1406 of gui.py enter value for user_auth_token. (details in the phase 2 report)
 5. Run gui.py in IDE of your choice or in a terminal with:
 ```bash
 python gui.py
