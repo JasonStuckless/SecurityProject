@@ -1403,7 +1403,7 @@ class AuthenticationApp(QMainWindow):
         try:
             model = authentication.voiceDetection.Model.from_pretrained(
                 "pyannote/wespeaker-voxceleb-resnet34-LM",
-                use_auth_token="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"
+                use_auth_token=""
             )
             inference = authentication.voiceDetection.Inference(model, window="whole")
 
